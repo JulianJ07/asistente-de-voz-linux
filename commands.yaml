@@ -1,0 +1,6 @@
+apps:
+  spotify: flatpak run com.spotify.Client
+  steam: steam
+  heroic: heroic
+  minecraft: minecraft-launcher
+  rocket league: heroic

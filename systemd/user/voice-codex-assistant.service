@@ -1,0 +1,18 @@
+[Unit]
+Description=Voice Codex Assistant daemon
+Documentation=file:%h/voice-codex-assistant/README.md
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/voice-codex-assistant
+ExecStart=%h/voice-codex-assistant/.venv/bin/python %h/voice-codex-assistant/main.py --daemon
+Restart=always
+RestartSec=5
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+

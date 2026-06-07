@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/voice-codex-assistant"
+exec "$HOME/voice-codex-assistant/.venv/bin/python" main.py --trigger
+

@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.voice_state.json
+.tts_stop_requested
+.tts_processes.json
+voice_samples/
+logs/
+*.log
+*.sock
+*.wav
+*.png

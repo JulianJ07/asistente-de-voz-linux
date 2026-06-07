@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$HOME/voice-codex-assistant"
+
+if [ "$#" -gt 0 ]; then
+  text="$*"
+else
+  text="$(cat)"
+fi
+
+exec "$HOME/voice-codex-assistant/.venv/bin/python" main.py --text "$text"
+
