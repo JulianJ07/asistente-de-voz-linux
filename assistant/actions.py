@@ -212,6 +212,23 @@ def handle_volume(text: str, cfg: Config) -> ActionResult | None:
     return None
 
 
+def handle_fast_reply(text: str, cfg: Config) -> ActionResult | None:
+    normalized = normalize(text).strip(" .!?¿¡")
+    if normalized in {"hola", "buenas", "hey", "hola jarvis", "jarvis", "oye jarvis"}:
+        return ActionResult("respuesta local", "ninguna", "En linea.")
+    if normalized in {"estas ahi", "sigues ahi", "me escuchas", "estas escuchando"}:
+        return ActionResult("respuesta local", "ninguna", "En linea. Te escucho.")
+    if normalized in {"como estas", "como vas", "estado"}:
+        return ActionResult("respuesta local", "ninguna", "Operativo.")
+    if normalized in {"gracias", "muchas gracias"}:
+        return ActionResult("respuesta local", "ninguna", "Hecho.")
+    if normalized in {"quien eres", "como te llamas"}:
+        return ActionResult("respuesta local", "ninguna", "Soy J.A.R.V.I.S., tu asistente local de voz para Linux.")
+    if normalized in {"que puedes hacer", "que sabes hacer"}:
+        return ActionResult("respuesta local", "ninguna", "Puedo abrir apps, controlar audio, revisar pantalla, ejecutar comandos y responder consultas.")
+    return None
+
+
 def handle_voice_settings(text: str, cfg: Config) -> ActionResult | None:
     normalized = normalize(text)
     current = tts.load_voice_settings(cfg)
@@ -278,16 +295,16 @@ def handle_voice_settings(text: str, cfg: Config) -> ActionResult | None:
             gender="masculina",
             kokoro_voice="em_alex",
             profile=tts.DEEP_MALE_PROFILE,
-            kokoro_speed=0.82,
+            kokoro_speed=0.88,
             piper_model=model,
             piper_voice_config=config_path,
-            piper_length_scale=1.25,
-            piper_sentence_silence=0.45,
-            speed=0.82,
+            piper_length_scale=1.16,
+            piper_sentence_silence=0.38,
+            speed=0.9,
             effects=True,
-            pitch=-420,
-            tempo=0.86,
-            bass=6,
+            pitch=-360,
+            tempo=0.9,
+            bass=4.5,
             compress=True,
             reverb="none",
         )
@@ -355,14 +372,14 @@ def handle_voice_settings(text: str, cfg: Config) -> ActionResult | None:
             profile=tts.DEEP_MALE_PROFILE,
             gender="masculina",
             kokoro_voice="em_alex",
-            kokoro_speed=0.82,
-            piper_length_scale=1.25,
-            piper_sentence_silence=0.45,
-            speed=0.82,
+            kokoro_speed=0.88,
+            piper_length_scale=1.16,
+            piper_sentence_silence=0.38,
+            speed=0.9,
             effects=True,
-            pitch=-420,
-            tempo=0.86,
-            bass=6,
+            pitch=-360,
+            tempo=0.9,
+            bass=4.5,
             compress=True,
             reverb="none",
         )
@@ -528,6 +545,7 @@ def handle_configured_app(text: str, cfg: Config) -> ActionResult | None:
 def handle_local_action(text: str, cfg: Config) -> ActionResult | None:
     for handler in [
         execute_pending_confirmation,
+        handle_fast_reply,
         handle_terminal_command,
         handle_install_package,
         handle_reasoning_mode,

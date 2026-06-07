@@ -192,10 +192,130 @@ def _split_long_sentence(sentence: str, limit: int = 150) -> list[str]:
     return chunks
 
 
+# Diccionario de pronunciación fonética para Kokoro en español.
+# Clave: regex case-insensitive de la palabra técnica.
+# Valor: cómo debe pronunciarla Kokoro con lang_code español.
+_PHONETIC_MAP: list[tuple[str, str]] = [
+    # Lenguajes y runtimes
+    (r"\bPython\b", "Páizon"),
+    (r"\bDjango\b", "Yángo"),
+    (r"\bFlask\b", "Flásk"),
+    (r"\bRust\b", "Rást"),
+    (r"\bGo\b(?= |\.|,|$)", "Gou"),
+    (r"\bNode\.?js\b", "Noud Yei Es"),
+    (r"\bNext\.?js\b", "Neks Yei Es"),
+    (r"\bReact\b", "Ríact"),
+    (r"\bVue\b", "Viú"),
+    (r"\bSwift\b", "Suíft"),
+    (r"\bKotlin\b", "Kótlin"),
+    (r"\bDart\b", "Dart"),
+    (r"\bElixir\b", "Ilíxer"),
+    (r"\bHaskell\b", "Jáskel"),
+    (r"\bLua\b", "Lúa"),
+
+    # Herramientas y plataformas
+    (r"\bDocker\b", "Dóker"),
+    (r"\bKubernetes\b", "Kiubernétis"),
+    (r"\bGitHub\b", "Guít Jab"),
+    (r"\bGitLab\b", "Guít Lab"),
+    (r"\bGit\b", "Guít"),
+    (r"\bLinux\b", "Línux"),
+    (r"\bDebian\b", "Débien"),
+    (r"\bUbuntu\b", "Ubúntu"),
+    (r"\bArch\b", "Arch"),
+    (r"\bFedora\b", "Fedóra"),
+    (r"\bWayland\b", "Wéiland"),
+    (r"\bPipeline\b", "Páipláin"),
+    (r"\bWorkflow\b", "Wérkflou"),
+    (r"\bCache\b", "Cásh"),
+    (r"\bBash\b", "Bash"),
+    (r"\bShell\b", "Shel"),
+    (r"\bScript\b", "Escrípt"),
+    (r"\bFirewall\b", "Fáierual"),
+    (r"\bKernel\b", "Kérnel"),
+    (r"\bSocket\b", "Sóket"),
+    (r"\bThread\b", "Zred"),
+    (r"\bDeadlock\b", "Dédlok"),
+
+    # Modelos y LLMs
+    (r"\bClaude\b", "Clod"),
+    (r"\bOpenAI\b", "Ópen Ei Ai"),
+    (r"\bChatGPT\b", "Chat Yei Pi Ti"),
+    (r"\bGPT\b", "Yei Pi Ti"),
+    (r"\bCodex\b", "Códex"),
+    (r"\bGemini\b", "Yémini"),
+    (r"\bLlama\b", "Yáma"),
+    (r"\bOllama\b", "Oláma"),
+    (r"\bWhisper\b", "Uísper"),
+    (r"\bKokoro\b", "Kokóro"),
+    (r"\bLangChain\b", "Lángchein"),
+    (r"\bLangGraph\b", "Láng Graf"),
+
+    # Términos de desarrollo web y cloud
+    (r"\bAPI\b", "Ei Pi Ai"),
+    (r"\bREST\b", "Rést"),
+    (r"\bJSON\b", "Yéison"),
+    (r"\bYAML\b", "Yámel"),
+    (r"\bHTML\b", "Ache Ti Em Ele"),
+    (r"\bCSS\b", "Ce Ese Ese"),
+    (r"\bHTTPS?\b", "Ache Ti Ti Pi"),
+    (r"\bURL\b", "Iu Ar Ele"),
+    (r"\bSSH\b", "Ese Ese Ache"),
+    (r"\bSQL\b", "Ese Kiu Ele"),
+    (r"\bNoSQL\b", "Nou Ese Kiu Ele"),
+    (r"\bCI/CD\b", "Ci Ai, Ci Di"),
+    (r"\bAWS\b", "Ei Dábliu Es"),
+    (r"\bGCP\b", "Yei Si Pi"),
+    (r"\bCLI\b", "Ci El Ai"),
+    (r"\bUI\b", "Iu Ai"),
+    (r"\bUX\b", "Iu Ex"),
+
+    # Marcas tech comunes
+    (r"\bNVIDIA\b", "Envídia"),
+    (r"\bAMD\b", "Ei Em Di"),
+    (r"\bApple\b", "Épel"),
+    (r"\bGoogle\b", "Gúgel"),
+    (r"\bMicrosoft\b", "Máikrosoft"),
+    (r"\bSpotify\b", "Espotifai"),
+    (r"\bSlack\b", "Eslák"),
+    (r"\bDiscord\b", "Díscord"),
+    (r"\bReddit\b", "Rédit"),
+    (r"\bTwitch\b", "Tuích"),
+    (r"\bYouTube\b", "Iutúb"),
+    (r"\bNetflix\b", "Néftlix"),
+
+    # Hardware
+    (r"\bRTX\b", "Ar Ti Ex"),
+    (r"\bGPU\b", "Yei Pi Iu"),
+    (r"\bCPU\b", "Ce Pi Iu"),
+    (r"\bRAM\b", "Ram"),
+    (r"\bSSD\b", "Ese Ese Di"),
+    (r"\bHDD\b", "Ache Di Di"),
+    (r"\bUSB\b", "Iu Es Bi"),
+    (r"\bHDMI\b", "Ache Di Em Ai"),
+    (r"\bBIOS\b", "Báios"),
+    (r"\bWi-?Fi\b", "Uáifai"),
+    (r"\bBluetooth\b", "Blútuz"),
+]
+
+
+def _apply_phonetic_map(text: str) -> str:
+    """
+    Sustituye palabras técnicas en inglés por su pronunciación fonética
+    para que Kokoro en modo español las pronuncie correctamente.
+    Solo actúa sobre palabras completas (word boundaries) para no romper
+    palabras en español que contengan esas letras.
+    """
+    for pattern, replacement in _PHONETIC_MAP:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
 def prepare_tts_text(text: str) -> str:
     cleaned = re.sub(r"```.*?```", "Incluye un bloque de codigo, no lo leere completo.", text, flags=re.DOTALL)
     cleaned = re.sub(r"`([^`]{1,80})`", r"\1", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = _apply_phonetic_map(cleaned)
     if not cleaned:
         return ""
 
@@ -284,11 +404,11 @@ def candidate_voice_dirs() -> list[Path]:
 
 
 def list_piper_voices() -> list[Path]:
-    voices: list[Path] = []
+    voices: set[Path] = set()
     for directory in candidate_voice_dirs():
         if directory.exists():
-            voices.extend(sorted(directory.rglob("*.onnx")))
-    return voices
+            voices.update(path.resolve() for path in directory.rglob("*.onnx"))
+    return sorted(voices)
 
 
 def _score_piper_voice(path: Path) -> int:
@@ -365,17 +485,17 @@ def deep_male_settings(cfg: Config, current: VoiceSettings | None = None) -> Voi
         gender="masculina",
         kokoro_lang=cfg.kokoro_lang or "e",
         kokoro_voice=preferred_kokoro_voice(cfg.kokoro_voice),
-        kokoro_speed=0.82,
+        kokoro_speed=0.88,
         piper_model=piper_model,
         piper_voice_config=config_path,
-        piper_length_scale=1.25,
-        piper_sentence_silence=0.45,
+        piper_length_scale=1.16,
+        piper_sentence_silence=0.38,
         espeak_voice="es-419",
-        speed=0.82,
+        speed=0.9,
         effects=True,
-        pitch=-420,
-        tempo=0.86,
-        bass=6.0,
+        pitch=-360,
+        tempo=0.9,
+        bass=4.5,
         compress=True,
         reverb="none",
     )
@@ -535,6 +655,23 @@ def _wav_sample_rate(path: str) -> int:
     return 22050
 
 
+def _wav_duration(path: str) -> float:
+    ffprobe = shutil.which("ffprobe")
+    if ffprobe:
+        try:
+            result = subprocess.run(
+                [ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", path],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return max(0.0, float(result.stdout.strip().splitlines()[0]))
+        except Exception:
+            pass
+    return 0.0
+
+
 def _postprocess_wav(input_path: str, cfg: Config, settings: VoiceSettings) -> str:
     if not settings.effects:
         return input_path
@@ -563,6 +700,7 @@ def _postprocess_wav(input_path: str, cfg: Config, settings: VoiceSettings) -> s
     ffmpeg = shutil.which("ffmpeg")
     if ffmpeg:
         sample_rate = _wav_sample_rate(input_path)
+        duration = _wav_duration(input_path)
         pitch_factor = 2 ** (settings.pitch / 1200)
         atempo = _clamp(settings.tempo, 0.82, 1.18)
         filters = [
@@ -573,10 +711,17 @@ def _postprocess_wav(input_path: str, cfg: Config, settings: VoiceSettings) -> s
             f"bass=g={settings.bass:.1f}:f=110:w=0.6",
         ]
         if settings.compress:
-            filters.append("acompressor=threshold=-18dB:ratio=2.2:attack=18:release=180:makeup=1.6")
-        if _reverb_amount(settings) != "0":
-            filters.append("aecho=0.7:0.18:38:0.08")
+            filters.append("acompressor=threshold=-20dB:ratio=1.7:attack=24:release=140:makeup=1.2")
+        # Resonancia tecnologica sutil. Mantener decay bajo evita ruido de cola al final.
+        if settings.reverb not in {"0", "false", "off", "none", "no"}:
+            filters.append("aecho=0.35:0.16:24:0.06")
+        else:
+            filters.append("aecho=0.22:0.12:8:0.025")
         filters.append("loudnorm=I=-18:TP=-1.5:LRA=9")
+        if duration > 0:
+            expected_duration = duration / atempo
+            fade_start = max(0.0, expected_duration - 0.06)
+            filters.append(f"afade=t=out:st={fade_start:.3f}:d=0.055")
         filters.append(f"aresample={sample_rate}")
         command = [
             ffmpeg,

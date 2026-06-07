@@ -38,8 +38,11 @@ def preflight(cfg: Config, logger: logging.Logger) -> None:
 
     checks.append(("commands.yaml", cfg.commands_file.exists(), str(cfg.commands_file)))
 
-    codex_ok, codex_msg = codex_cli.check(cfg)
-    checks.append(("Codex CLI", codex_ok, codex_msg))
+    if cfg.codex_preflight_check:
+        codex_ok, codex_msg = codex_cli.check(cfg)
+        checks.append(("Codex CLI", codex_ok, codex_msg))
+    else:
+        checks.append(("Codex CLI", True, "omitido en daemon; usa python main.py --test para verificar"))
 
     player_ok, player_msg = actions.check_playerctl()
     checks.append(("playerctl", player_ok, player_msg))

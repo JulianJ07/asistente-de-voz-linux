@@ -24,8 +24,21 @@ def load_dotenv_if_present(root: Path) -> None:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
-        value = value.strip().strip('"').strip("'")
+        value = clean_env_value(value)
         os.environ.setdefault(key, value)
+
+
+def clean_env_value(value: str) -> str:
+    value = value.strip()
+    if not value:
+        return ""
+    if value[0] in {"'", '"'}:
+        quote = value[0]
+        end = value.find(quote, 1)
+        if end != -1:
+            return value[1:end]
+        return value.strip(quote)
+    return value.split("#", 1)[0].strip()
 
 
 def env_bool(name: str, default: bool) -> bool:
@@ -77,6 +90,7 @@ class Config:
     codex_reasoning_level: str
     codex_sandbox: str
     codex_bypass_approvals_and_sandbox: bool
+    codex_preflight_check: bool
     assistant_language: str
     tts_engine: str
     voice_profile: str
@@ -139,6 +153,7 @@ def load_config() -> Config:
         codex_reasoning_level=os.getenv("CODEX_REASONING_LEVEL", ""),
         codex_sandbox=os.getenv("CODEX_SANDBOX", "read-only"),
         codex_bypass_approvals_and_sandbox=env_bool("CODEX_BYPASS_APPROVALS_AND_SANDBOX", False),
+        codex_preflight_check=env_bool("CODEX_PREFLIGHT_CHECK", False),
         assistant_language=os.getenv("ASSISTANT_LANGUAGE", "es"),
         tts_engine=os.getenv("TTS_ENGINE", "kokoro").lower(),
         voice_profile=os.getenv("VOICE_PROFILE", "deep_male_latam_ai"),
@@ -155,9 +170,9 @@ def load_config() -> Config:
         tts_speed=float(os.getenv("TTS_SPEED", "0.82")),
         tts_volume=float(os.getenv("TTS_VOLUME", "1.0")),
         voice_effects=env_bool("VOICE_EFFECTS", True),
-        voice_pitch=int(os.getenv("VOICE_PITCH", "-420")),
-        voice_tempo=float(os.getenv("VOICE_TEMPO", "0.86")),
-        voice_bass=float(os.getenv("VOICE_BASS", "6")),
+        voice_pitch=int(os.getenv("VOICE_PITCH", "-360")),
+        voice_tempo=float(os.getenv("VOICE_TEMPO", "0.90")),
+        voice_bass=float(os.getenv("VOICE_BASS", "4.5")),
         voice_compress=env_bool("VOICE_COMPRESS", True),
         voice_reverb=os.getenv("VOICE_REVERB", "none").lower(),
         require_confirmation_for_sudo=env_bool("REQUIRE_CONFIRMATION_FOR_SUDO", True),
